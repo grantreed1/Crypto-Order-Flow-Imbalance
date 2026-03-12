@@ -1,7 +1,7 @@
 # Testing Order Flow Imbalance in Bitcoin Markets
 
 ## Overview
-We backtest and stress-test a high-frequency trading (HFT) strategy based on Order Flow Imbalance (OFI). The analysis evaluates tick-level order book data across six major cryptocurrency exchanges to determine if theoretical OFI alpha can survive real-world market microstructure frictions.
+We stress-test a high-frequency trading (HFT) strategy based on Order Flow Imbalance (OFI). The analysis evaluates tick-level order book data across six major cryptocurrency exchanges to determine if theoretical OFI alpha can survive real-world market microstructure frictions.
 
 ## Data Preprocessing
 To accurately compare order flow across fragmented liquidity pools, the raw trade data is processed through three systematic steps:
