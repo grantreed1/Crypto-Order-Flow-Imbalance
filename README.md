@@ -1,25 +1,25 @@
 # Testing Order Flow Imbalance in Bitcoin Markets
 
 ## Overview
-We stress-test a high-frequency trading (HFT) strategy based on Order Flow Imbalance (OFI). The analysis evaluates tick-level order book data across six major cryptocurrency exchanges to determine if theoretical OFI alpha can survive real-world market microstructure frictions.
+This project stress-tests a high-frequency trading (HFT) strategy based on Order Flow Imbalance (OFI) across six major cryptocurrency exchanges. 
 
 ## Data Preprocessing
-To accurately compare order flow across fragmented liquidity pools, the raw trade data is processed through three systematic steps:
+Raw trade data is processed through a three-step pipeline to handle fragmented liquidity:
+1. **Unit Normalization:** Converts Deribit's inverse futures into standard BTC quantities.
+2. **Winsorization:** Clips extreme outliers (1st/99th percentiles) to prevent block trades from distorting the signal.
+3. **Z-Score Standardization:** Normalizes the signal via a rolling window to measure relative deviation from the mean.
 
-* **Unit Normalization:** Standardizes contract sizes, specifically converting Deribit's inverse futures contracts into standard underlying BTC quantities.
-* **Winsorization:** Clips extreme outliers (1st and 99th percentiles) from the raw flow to prevent anomalous, massive block trades from distorting the underlying signal.
-* **Z-Score Standardization:** Normalizes the signal using a rolling window. This ensures the model measures signal strength by its relative deviation from the mean, rather than its absolute volume.
+## Strategy Logic
+The strategy translates order flow into trade decisions systematically:
+1. **Target Construction:** Calculates the "Forward Return" over a set horizon (e.g., 1 second).
+2. **Model Training:** Splits data chronologically (40% Train / 60% Test) and fits a Linear Regression to derive a predictive Beta coefficient.
+3. **Dynamic Thresholding:** Applies the Beta to the out-of-sample set. Trades trigger only if the predicted return exceeds a dynamic "J-Threshold" (targeting the top 5% of opportunities).
 
-## Core Strategy & Execution
-The strategy transforms the normalized order flow into actionable trade decisions via a chronological, three-step framework:
+## Conclusion: Performance & Risk
+The backtest reveals a high-alpha signal severely undermined by directional risk and scaling limits.
+* **Drawdown Risk:** On OKX, optimized settings generated a Net P&L of $575,712. However, the Maximum Drawdown was -$1.2M.
+* **Missing Exit Logic:** Without a formal stop-loss, the model averaged down into losing trends, ultimately suffering a catastrophic -$62.3M drawdown.
+* **Scalability Frictions:** Real-world network latency inevitably causes slippage, destroying HFT margins. Furthermore, scaling position limits (e.g., from 10 BTC to 100 BTC) hits a strict liquidity ceiling, triggering immediate adverse selection.
 
-1. **Target Construction:** Calculates the "Forward Return" over a specified horizon (defaulting to a 1-second interval) to establish the target variable the model will attempt to predict.
-2. **Model Training:** Executes a strict chronological split (40% Train / 60% Test). A Linear Regression is fitted on the training set to derive the Beta coefficient, quantifying the OFI signal's predictive power.
-3. **Dynamic Thresholding:** The derived Beta is applied to the out-of-sample Test set. Trades are conditionally triggered only if the absolute predicted return exceeds a dynamic "J-Threshold," which is dynamically calibrated to target a specific market participation rate (e.g., executing only on the top 5% of opportunities).
-
-## Conclusion
-Our backtest reveals a high-alpha signal that is ultimately undermined by extreme directional risk and a lack of cross-venue generalizability.
-
-* Under optimized settings, the strategy generated a Net P&L of $575,712 on OKX.
-* On that exact same exchange, the Maximum Drawdown reached -$1.2M, more than double the total generated profit.
-* The strategy successfully enters trades based on a 1-second predictive horizon but lacks a formal exit or stop-loss framework. Without position limits, the strategy suffered a catastrophic **-$62.3M drawdown** by mechanically "averaging down" into persistent, losing market trends
+## Data Notice
+> The raw tick and order book data used for this analysis are stored in massive `.parquet` files that exceed GitHub's repository limits. To comply with these size constraints, the underlying data files have been excluded from this repository. 
